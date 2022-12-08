@@ -4,16 +4,19 @@ import json
 
 URL = "https://mobiux.in/assignment/sales-data.txt"
 response_data = requests.get(URL)
-main_data = response_data.text.strip()
-#######################################################################################################################
-class MonthData():
+main_datas = response_data.text.strip()
+
+
+class MonthValues():
     
     def __init__(self, name):
         
         self.month_name = name
         self.month_total = 0
         self.articles = {}
-        
+        #print(self.articles)
+        #print(self.month_total)
+        #print(self.month_name)
     def articles_update(self, quantity, sku):
         if sku in self.articles:
             self.articles[sku].append(quantity)
@@ -24,24 +27,21 @@ class MonthData():
         self.month_total = int(self.month_total) + int(amount)
     
 
-#   %Y-%m-%d
-#######################################################################################################################
 months = []
-pointers_month = []
-#main_list = []
+poin_month = []
 articles = {}
 
-
-for each in main_data.split('\n')[1:]:
+for each in main_datas.split('\n')[1:]:
     Date,SKU,Unit_Price,Quantity,Total_Price = each.split(',')
     
-    Date = dt.datetime.strptime(Date, "%Y-%m-%d").date() #2019-02-20
+    Date = dt.datetime.strptime(Date, "%Y-%m-%d").date()
     
     if str(Date.strftime('%b')) not in months:
-        month_obj = MonthData(str(Date.strftime('%b')))
+        month_obj = MonthValues(str(Date.strftime('%b')))
+        
         months.append(Date.strftime('%b'))
         
-        pointers_month.append(month_obj)
+        poin_month.append(month_obj)
 
     month_obj.add_total(Total_Price)
     
@@ -50,27 +50,20 @@ for each in main_data.split('\n')[1:]:
     
     month_obj.articles_update(int(Quantity), SKU)
 
-#    main_list.append({
-#        'Date' : Date,
-#        'SKU' : SKU,
-#        'Unit_Price' : Unit_Price,
-#        'Quantity' : Quantity,
-#        'Total_Price' : Total_Price.strip()
-#    })
-#######################################################################################################################
-TOTAL_SALES = 0
+
+total = 0
 month_wise = {}
 
-for x in pointers_month:
-    TOTAL_SALES += x.month_total
+for x in poin_month:
+    total += x.month_total
     
-    month_wise.update({ x.month_name : {"Month Total" : x.month_total }})
+    month_wise.update({ x.month_name : {"Month_total" : x.month_total }})
     
-    #Most revenue
-    most_sold_amt = 0
+    
+    most_sold_imt = 0
     most_revenue_name = ''
     
-    #Most Popular
+    
     quantity = 0
     most_sold_name = ''
     
@@ -84,29 +77,26 @@ for x in pointers_month:
             most_sold_name = temp1
             quantity = total_sold
             
-        if total_sold*int(articles[temp1]) > most_sold_amt:
+        if total_sold*int(articles[temp1]) > most_sold_imt:
             most_revenue_name = temp1
-            most_sold_amt = total_sold*int(articles[temp1])
+            most_sold_imt = total_sold*int(articles[temp1])
             
     month_wise[x.month_name].update(
         {
-            'Most Sold Name' : most_sold_name,
-            'Most Sold Quantity' : quantity,
-            'Most Sold Min' : min(x.articles.get(most_sold_name)),
-            'Most Sold Max' : max(x.articles.get(most_sold_name)),
-            'Most Sold Avg': sum(x.articles.get(most_sold_name))/len(x.articles.get(most_sold_name))
+            'Most_sold_name' : most_sold_name,
+            'Most_sold_quantity' : quantity,
+            'Most_sold_min' : min(x.articles.get(most_sold_name)),
+            'Most_sold_max' : max(x.articles.get(most_sold_name)),
+            'Most_sold_avg': sum(x.articles.get(most_sold_name))/len(x.articles.get(most_sold_name))
         }
         )
     month_wise[x.month_name].update(
         {
-            'Most Revenue Name' : most_revenue_name,
-            'Total_Revenue' : most_sold_amt,
-            'Percentage Amount' : str(round((most_sold_amt/x.month_total)*100,1)) + '%'
+            'Most_revenue_name' : most_revenue_name,
+            'Total_revenue' : most_sold_imt,
+            'Percentage_amount' : str(round((most_sold_imt/x.month_total)*100,1)) + '%'
         }
         )
 
 for key,value in month_wise.items():
     print(key,' : ',json.dumps(value, indent = 4))
-    
-    
-print('\n\n',json.dumps(articles, indent = 4))
